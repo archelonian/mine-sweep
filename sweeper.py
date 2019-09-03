@@ -46,7 +46,7 @@ def count_mines():
                 for i in range(row - 1, row + 2):
                     for j in range(col - 1, col + 2):
                         # only count if square is on the board
-                        if i > 0 and i < ROWS and j > 0 and j < COLS:
+                        if i >= 0 and i < ROWS and j >= 0 and j < COLS:
                             if true_board[i][j] == 9:
                                 num_mines += 1
 
@@ -116,6 +116,21 @@ def print_board(is_true_board):
     print(output)
 # -- end print_board
 
+# reveals neighbors of a square with 0 surrounding mines
+def reveal_neighbors(row, col):
+    news = []
+    for i in range(row - 1, row + 2):
+        for j in range(col - 1, col + 2):
+            if i >= 0 and i < ROWS and j >= 0 and j < COLS:
+                # reveal again if a new 0 square is found
+                if true_board[i][j] == 0 and known_board[i][j] == -1:
+                    news.append((i, j))
+
+                known_board[i][j] = true_board[i][j]
+
+    for coords in news:
+        reveal_neighbors(coords[0], coords[1])
+
 # reveals this square and reveals its neighbors or detonates
 def check_square(row, col, flag):
     known = known_board[row][col]
@@ -123,7 +138,6 @@ def check_square(row, col, flag):
     valid_move = True
 
     if known != -1:
-        print_board(False)
         print("Already checked this square!")
     elif true == 9:
         print_board(True)
@@ -136,12 +150,7 @@ def check_square(row, col, flag):
             known_board[row][col] = true
 
             if true == 0:
-                # check, not flag, all neighbors
-                for i in range(row - 1, row + 2):
-                    for j in range(col - 1, col + 2):
-                        if i > 0 and i < ROWS and j > 0 and j < COLS:
-                            if i != row and j != col:
-                                check_square(i, j, False)
+                reveal_neighbors(row, col)
 
     return valid_move
 
@@ -194,17 +203,17 @@ print_board(False)
 print("Input should be in the form of \"[number] [letter] F (flag, opt.)\"")
 print("\te.g. \"3 H F\", \"14 b F\", \"9 B\", \"7 Q\"")
 print("Use \"exit\" to leave the game.")
-user_input = input("Enter coordinates of space to check: ")
 
 while game_active:
-    row, col, flag = parse_input(user_input)
-    game_active = check_square(row, col, flag)
-
-    if not game_active:
-        continue
-
-    print_board(False)
     user_input = input("Enter coordinates of space to check: ")
 
     if user_input == "exit":
         game_active = False
+    # TODO: remove this "special debugging command"
+    elif user_input == "show true":
+        print_board(True)
+    else:
+        row, col, flag = parse_input(user_input)
+        game_active = check_square(row, col, flag)
+        print_board(False)
+
