@@ -175,7 +175,7 @@ def parse_input(user_input):
         col = col_id - 65
     # a-z, 97-122
     else:
-        col = col_id - 97
+        col = col_id - 71
 
     if len(parts) == 3:
         if parts[2] == "F":

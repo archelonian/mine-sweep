@@ -1,6 +1,10 @@
-- check input validity
-- add win condition of all non-mine squares revealed
+- validate input
+- add win condition (all non-mine squares revealed)
 
-- allow size customization
-- try it in oop lol
+- allow size customization with command-line args
+  - preset beginner, intermediate, expert
 - help menu
+- chording
+- replay after stepping on a mine
+
+- try it in oop lol
