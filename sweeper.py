@@ -120,6 +120,7 @@ def print_board(is_true_board):
 def check_square(row, col, flag):
     known = known_board[row][col]
     true = true_board[row][col]
+    valid_move = True
 
     if known != -1:
         print_board(False)
@@ -127,18 +128,22 @@ def check_square(row, col, flag):
     elif true == 9:
         print_board(True)
         print("You stepped on a mine! You lose.")
+        valid_move = False
     else:
         if(flag):
-            known[row][col] = 9
+            known_board[row][col] = 9
         else:
-            known[row][col] = true[row][col]
+            known_board[row][col] = true
 
-            if true[row][col] == 0:
+            if true == 0:
                 # check, not flag, all neighbors
                 for i in range(row - 1, row + 2):
                     for j in range(col - 1, col + 2):
                         if i > 0 and i < ROWS and j > 0 and j < COLS:
-                            check_square(i, j, False)
+                            if i != row and j != col:
+                                check_square(i, j, False)
+
+    return valid_move
 
 # checks that the input is a valid row value: an integer between 1 and ROWS
 def validate_row(val):
@@ -158,9 +163,29 @@ def parse_input(user_input):
 
     parts = user_input.split(" ")
 
-    # check input validity
+    # TODO: check input validity
+
+    # subtract one because the row display is 1-indexed
+    row = int(parts[0]) - 1
+
+    col_id = ord(parts[1])
+
+    # A-Z, 65-90
+    if col_id < 97:
+        col = col_id - 65
+    # a-z, 97-122
+    else:
+        col = col_id - 97
+
+    if len(parts) == 3:
+        if parts[2] == "F":
+            flag = True
+
+    return row, col, flag
 
 # ----------------------------------------------------------------------
+
+game_active = True
 
 set_mines()
 count_mines()
@@ -168,4 +193,18 @@ print_board(False)
 
 print("Input should be in the form of \"[number] [letter] F (flag, opt.)\"")
 print("\te.g. \"3 H F\", \"14 b F\", \"9 B\", \"7 Q\"")
+print("Use \"exit\" to leave the game.")
 user_input = input("Enter coordinates of space to check: ")
+
+while game_active:
+    row, col, flag = parse_input(user_input)
+    game_active = check_square(row, col, flag)
+
+    if not game_active:
+        continue
+
+    print_board(False)
+    user_input = input("Enter coordinates of space to check: ")
+
+    if user_input == "exit":
+        game_active = False
