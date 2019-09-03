@@ -22,7 +22,7 @@ true_board = [[-1 for i in range(0, COLS)] for j in range(0, ROWS)]
 
 # choose squares to set mines on
 def set_mines():
-    squares = [0 for i in range(0, ROWS * COLS)]
+    squares = [-1 for i in range(0, ROWS * COLS)]
 
     for i in range(0, MINES):
         squares[i] = 9
@@ -34,6 +34,23 @@ def set_mines():
     for i in range(0, len(squares)):
         # floor divide to get how many rows down, what's left (mod) is col
         true_board[i // COLS][i % COLS] = squares[i]
+
+# updates the values of the squares with the number of surrounding mines
+def count_mines():
+    for row in range(0, ROWS):
+        for col in range(0, COLS):
+            num_mines = 0
+
+            if true_board[row][col] != 9:
+                # scan 3x3 centered on current square
+                for i in range(row - 1, row + 2):
+                    for j in range(col - 1, col + 2):
+                        # only count if square is on the board
+                        if i > 0 and i < ROWS and j > 0 and j < COLS:
+                            if true_board[i][j] == 9:
+                                num_mines += 1
+
+                true_board[row][col] = num_mines
 
 # makes the column ids and delimiting line that are printed before the board
 def make_col_ids():
@@ -116,6 +133,7 @@ def check_square(row, col, mark):
 # ----------------------------------------------------------------------
 
 set_mines()
+count_mines()
 print_board(False)
 
 print("Input should be in the form of \"[letter]/[number] F (opt.)\"")
