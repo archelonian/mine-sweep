@@ -117,7 +117,7 @@ def print_board(is_true_board):
 # -- end print_board
 
 # reveals this square and reveals its neighbors or detonates
-def check_square(row, col, mark):
+def check_square(row, col, flag):
     known = known_board[row][col]
     true = true_board[row][col]
 
@@ -128,7 +128,37 @@ def check_square(row, col, mark):
         print_board(True)
         print("You stepped on a mine! You lose.")
     else:
-        print("TODO")
+        if(flag):
+            known[row][col] = 9
+        else:
+            known[row][col] = true[row][col]
+
+            if true[row][col] == 0:
+                # check, not flag, all neighbors
+                for i in range(row - 1, row + 2):
+                    for j in range(col - 1, col + 2):
+                        if i > 0 and i < ROWS and j > 0 and j < COLS:
+                            check_square(i, j, False)
+
+# checks that the input is a valid row value: an integer between 1 and ROWS
+def validate_row(val):
+    output = False
+
+    if(val.isdigit()):
+        if int(val) > 0 and int(val) <= ROWS:
+            output = True
+
+    return output
+
+# handle user input by rejecting or checking the indicated square
+def parse_input(user_input):
+    row = -1
+    col = -1
+    flag = False
+
+    parts = user_input.split(" ")
+
+    # check input validity
 
 # ----------------------------------------------------------------------
 
@@ -136,6 +166,6 @@ set_mines()
 count_mines()
 print_board(False)
 
-print("Input should be in the form of \"[letter]/[number] F (opt.)\"")
-print("\te.g. \"H/3\", \"b/14 F\", \"B/9\", \"Q/7\"")
+print("Input should be in the form of \"[number] [letter] F (flag, opt.)\"")
+print("\te.g. \"3 H F\", \"14 b F\", \"9 B\", \"7 Q\"")
 user_input = input("Enter coordinates of space to check: ")
