@@ -18,6 +18,8 @@ known_board = [[-1 for i in range(0, COLS)] for j in range(0, ROWS)]
 # initialize true board configuration with -1 as well
 true_board = [[-1 for i in range(0, COLS)] for j in range(0, ROWS)]
 
+num_revealed = 0
+
 # ----------------------------------------------------------------------
 
 # choose squares to set mines on
@@ -118,24 +120,36 @@ def print_board(is_true_board):
 
 # reveals neighbors of a square with 0 surrounding mines
 def reveal_neighbors(row, col):
-    news = []
+    news = set()
     for i in range(row - 1, row + 2):
         for j in range(col - 1, col + 2):
             if i >= 0 and i < ROWS and j >= 0 and j < COLS:
-                # reveal again if a new 0 square is found
-                if true_board[i][j] == 0 and known_board[i][j] == -1:
-                    news.append((i, j))
+                if known_board[i][j] == -1:
+                    global num_revealed
+                    num_revealed += 1
+
+                    # reveal again if a new 0 square is found
+                    if true_board[i][j] == 0:
+                        news.add((i, j))
 
                 known_board[i][j] = true_board[i][j]
 
     for coords in news:
         reveal_neighbors(coords[0], coords[1])
 
+# checks if the win condition (all non-mine squares revealed) is met
+def check_for_victory():
+    global num_revealed
+    win_cond = num_revealed == ((ROWS * COLS) - MINES)
+
+    return win_cond
+
 # reveals this square and reveals its neighbors or detonates
 def check_square(row, col, flag):
     known = known_board[row][col]
     true = true_board[row][col]
     valid_move = True
+    win = False
 
     # toggle flag
     if flag:
@@ -153,10 +167,15 @@ def check_square(row, col, flag):
                 valid_move = False
             else:
                 known_board[row][col] = true
+                global num_revealed
+                num_revealed += 1
+
                 if true == 0:
                     reveal_neighbors(row, col)
 
-    return valid_move
+    win = check_for_victory()
+
+    return valid_move, win
 
 # checks that the input is a valid row value: an integer between 1 and ROWS
 def validate_row(val):
@@ -199,6 +218,7 @@ def parse_input(user_input):
 # ----------------------------------------------------------------------
 
 game_active = True
+win = False
 
 set_mines()
 count_mines()
@@ -218,6 +238,10 @@ while game_active:
         print_board(True)
     else:
         row, col, flag = parse_input(user_input)
-        game_active = check_square(row, col, flag)
-        print_board(False)
-
+        game_active, win = check_square(row, col, flag)
+        if win:
+            game_active = False
+            print_board(True)
+            print("You win! Congratulations!")
+        else:
+            print_board(False)
