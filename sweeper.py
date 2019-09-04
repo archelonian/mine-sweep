@@ -19,6 +19,7 @@ known_board = [[-1 for i in range(0, COLS)] for j in range(0, ROWS)]
 true_board = [[-1 for i in range(0, COLS)] for j in range(0, ROWS)]
 
 num_revealed = 0
+mines_left = MINES
 
 # ----------------------------------------------------------------------
 
@@ -60,7 +61,7 @@ def make_col_ids():
     width = (int(math.log10(COLS)) + 1) + 1 + (2 * COLS) - 1
 
     # use A-Z then a-z
-    col_letters = string.ascii_uppercase + string.ascii_lowercase
+    col_letters = string.ascii_letters.swapcase()
     col_letters = col_letters[:COLS]
 
     # separate letters with spaces
@@ -111,11 +112,14 @@ def print_board(is_true_board):
             # padding between spaces
             line += " "
         
-        # remove extra space and move to next line
+        # move to next line
         output += line
         output += "\n"
 
     print(output)
+
+    if not is_true_board:
+        print("Mines: " + str(mines_left) + "\n")
 # -- end print_board
 
 # reveals neighbors of a square with 0 surrounding mines
@@ -145,26 +149,29 @@ def check_for_victory():
     return win_cond
 
 # reveals this square and reveals its neighbors or detonates
-def check_square(row, col, flag):
+def check_square(flag, row, col):
     known = known_board[row][col]
     true = true_board[row][col]
-    valid_move = True
+    game_not_over = True
     win = False
 
     # toggle flag
     if flag:
+        global mines_left
         if known == -1:
             known_board[row][col] = 9
+            mines_left -= 1
         elif known == 9:
             known_board[row][col] = -1
+            mines_left += 1
     else:
         if known != -1:
-            print("Already checked this square!")
+            print("Cannot check this square.")
         else:
             if true == 9:
                 print_board(True)
                 print("You stepped on a mine! You lose.")
-                valid_move = False
+                game_not_over = False
             else:
                 known_board[row][col] = true
                 global num_revealed
@@ -175,45 +182,65 @@ def check_square(row, col, flag):
 
     win = check_for_victory()
 
-    return valid_move, win
+    return game_not_over, win
 
-# checks that the input is a valid row value: an integer between 1 and ROWS
-def validate_row(val):
-    output = False
-
-    if(val.isdigit()):
-        if int(val) > 0 and int(val) <= ROWS:
-            output = True
-
-    return output
-
-# handle user input by rejecting or checking the indicated square
+# checks that the flag, row, and col are acceptable values
 def parse_input(user_input):
+    flag = False
     row = -1
     col = -1
-    flag = False
+
+    num_valid = True
+    flag_valid = True
+    row_valid = False
+    col_valid = False
 
     parts = user_input.split(" ")
 
-    # TODO: check input validity
+    flag_part = ""
+    row_part = ""
+    col_part = ""
 
-    # subtract one because the row display is 1-indexed
-    row = int(parts[0]) - 1
-
-    col_id = ord(parts[1])
-
-    # A-Z, 65-90
-    if col_id < 97:
-        col = col_id - 65
-    # a-z, 97-122
-    else:
-        col = col_id - 71
-
+    # split inputs correctly
     if len(parts) == 3:
-        if parts[2] == "F":
-            flag = True
+        flag_part = parts[0]
+        row_part = parts[1]
+        col_part = parts[2]
+    elif len(parts) == 2:
+        row_part = parts[0]
+        col_part = parts[1]
+    else:
+        num_valid = False
 
-    return row, col, flag
+    # check flag
+    if flag_part and flag_part == "F":
+        flag = True
+        # flag_valid stays True
+
+    if flag_part and flag_part != "F":
+        # flag stays False
+        flag_valid = False
+
+    # check row
+    if(row_part.isdigit()):
+        # subtract one because the row display is 1-indexed
+        row = int(row_part) - 1
+
+        if row > -1 and row < ROWS:
+            row_valid = True
+
+    # check col
+    if len(col_part) == 1:
+        possible_cols = string.ascii_letters.swapcase()[:COLS]
+        col = possible_cols.find(col_part)
+
+        if col > -1 and col < COLS:
+            col_valid = True
+
+    valid = num_valid and flag_valid and row_valid and col_valid
+
+    return valid, flag, row, col
+# -- end parse_input
 
 # ----------------------------------------------------------------------
 
@@ -224,8 +251,8 @@ set_mines()
 count_mines()
 print_board(False)
 
-print("Input should be in the form of \"[number] [letter] F (flag, opt.)\"")
-print("\te.g. \"3 H F\", \"14 b F\", \"9 B\", \"7 Q\"")
+print("Input should be in the form of \"F (flag, opt) [number] [letter]\"")
+print("\te.g. \"F 3 H\", \"F 14 b\", \"9 B\", \"7 Q\"")
 print("Use \"exit\" to leave the game.")
 
 while game_active:
@@ -237,11 +264,16 @@ while game_active:
     elif user_input == "show true":
         print_board(True)
     else:
-        row, col, flag = parse_input(user_input)
-        game_active, win = check_square(row, col, flag)
+        valid, flag, row, col = parse_input(user_input)
+
+        if valid:
+            game_active, win = check_square(flag, row, col)
+        else:
+            print("Invalid input.")
+
         if win:
             game_active = False
             print_board(True)
             print("You win! Congratulations!")
-        else:
+        elif game_active:
             print_board(False)
