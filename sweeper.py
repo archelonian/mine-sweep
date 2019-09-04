@@ -137,20 +137,24 @@ def check_square(row, col, flag):
     true = true_board[row][col]
     valid_move = True
 
-    if known != -1:
-        print("Already checked this square!")
-    elif true == 9:
-        print_board(True)
-        print("You stepped on a mine! You lose.")
-        valid_move = False
-    else:
-        if(flag):
+    # toggle flag
+    if flag:
+        if known == -1:
             known_board[row][col] = 9
+        elif known == 9:
+            known_board[row][col] = -1
+    else:
+        if known != -1:
+            print("Already checked this square!")
         else:
-            known_board[row][col] = true
-
-            if true == 0:
-                reveal_neighbors(row, col)
+            if true == 9:
+                print_board(True)
+                print("You stepped on a mine! You lose.")
+                valid_move = False
+            else:
+                known_board[row][col] = true
+                if true == 0:
+                    reveal_neighbors(row, col)
 
     return valid_move
 

@@ -1,10 +1,12 @@
 - validate input
 - add win condition (all non-mine squares revealed)
+- remove flags
 
 - allow size customization with command-line args
   - preset beginner, intermediate, expert
 - help menu
 - chording
 - replay after stepping on a mine
+- number of mines remaining (flags)
 
 - try it in oop lol
