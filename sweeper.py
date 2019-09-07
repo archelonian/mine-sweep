@@ -4,22 +4,18 @@
 import random
 import string
 import math
+import sys
 
-# start with preset expert size
-ROWS = 16
-# at current, columns must be <= 52 due to character limitations...
-COLS = 30
-MINES = 99
+# possible default sizes
+SIZES = {"beginner": (9, 9, 10), "intermediate": (16, 16, 40),
+            "expert": (16, 30, 99)}
 
-# initialize initial board with -1 (denoting nothing known)
-# want to do board[row][col]
-known_board = [[-1 for i in range(0, COLS)] for j in range(0, ROWS)]
-
-# initialize true board configuration with -1 as well
-true_board = [[-1 for i in range(0, COLS)] for j in range(0, ROWS)]
 
 num_revealed = 0
-mines_left = MINES
+
+arg_err_message = ("Wrong arguments supplied. Arguments should be either " +
+                    "\"beginner,\" \"intermediate,\" \"expert,\" or a custom" +
+                    " size in the format \"[# rows] [# columns] [# mines]\"")
 
 # ----------------------------------------------------------------------
 
@@ -242,6 +238,58 @@ def parse_input(user_input):
     return valid, flag, row, col
 # -- end parse_input
 
+# verify that the custom command-line arguments are permissible
+def verify_args(argv):
+    if argv[1].isdigit() and argv[2].isdigit() and argv[3].isdigit():
+        rows = int(argv[1])
+        cols = int(argv[2])
+        mines = int(argv[3])
+
+        if rows < 1 or cols < 1:
+            sys.exit("Cannot have zero or negative dimensions.")
+        if cols > 52:
+            sys.exit("Number of columns cannot be more than 52.")
+        if mines > (rows * cols):
+            sys.exit("Cannot have more mines than spaces on the board.")
+
+        return True
+    else:
+        return False
+
+# ----------------------------------------------------------------------
+
+# should either be a single word or a set of three numbers
+if len(sys.argv) != 2 and len(sys.argv) != 4:
+    sys.exit(arg_err_message)
+
+# one of the defaults
+if len(sys.argv) == 2:
+    if sys.argv[1] in SIZES:
+        size = SIZES[sys.argv[1]]
+
+        ROWS = size[0]
+        COLS = size[1]
+        MINES = size[2]
+    else:
+        sys.exit("Not a default size: beginner, intermediate, or expert.")
+# custom size
+elif len(sys.argv) == 4:
+    if verify_args(sys.argv):
+        ROWS = int(sys.argv[1])
+        COLS = int(sys.argv[2])
+        MINES = int(sys.argv[3])
+    else:
+        sys.exit(arg_err_message)
+
+# initialize initial board with -1 (denoting nothing known)
+# want to do board[row][col]
+known_board = [[-1 for i in range(0, COLS)] for j in range(0, ROWS)]
+
+# initialize true board configuration with -1 as well
+true_board = [[-1 for i in range(0, COLS)] for j in range(0, ROWS)]
+
+mines_left = MINES
+
 # ----------------------------------------------------------------------
 
 game_active = True
@@ -269,7 +317,7 @@ while game_active:
         if valid:
             game_active, win = check_square(flag, row, col)
         else:
-            print("Invalid input.")
+            print("\nInvalid input.\n")
 
         if win:
             game_active = False
