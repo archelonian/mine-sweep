@@ -209,11 +209,11 @@ def parse_input(user_input):
         num_valid = False
 
     # check flag
-    if flag_part and flag_part == "F":
+    if flag_part and flag_part == "#":
         flag = True
         # flag_valid stays True
 
-    if flag_part and flag_part != "F":
+    if flag_part and flag_part != "#":
         # flag stays False
         flag_valid = False
 
@@ -264,8 +264,8 @@ if len(sys.argv) != 2 and len(sys.argv) != 4:
 
 # one of the defaults
 if len(sys.argv) == 2:
-    if sys.argv[1] in SIZES:
-        size = SIZES[sys.argv[1]]
+    if sys.argv[1].lower() in SIZES:
+        size = SIZES[sys.argv[1].lower()]
 
         ROWS = size[0]
         COLS = size[1]
@@ -299,8 +299,8 @@ set_mines()
 count_mines()
 print_board(False)
 
-print("Input should be in the form of \"F (flag, opt) [number] [letter]\"")
-print("\te.g. \"F 3 H\", \"F 14 b\", \"9 B\", \"7 Q\"")
+print("Input should be in the form of \"# (flag, opt) [number] [letter]\"")
+print("\te.g. \"# 3 H\", \"# 14 b\", \"9 B\", \"7 Q\"")
 print("Use \"exit\" to leave the game.")
 
 while game_active:
